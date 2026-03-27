@@ -85,11 +85,11 @@ namespace himchistka
             loginPanel.Controls.Add(txtPassword);
 
             btnLogin = new Button { Left = 360, Top = 27, Width = 90, Text = "Войти", Name = "btnLogin" };
-            btnLogin.Click += (_, __) => Login();
+            btnLogin.Click += (_, __) => ExecuteSafe(Login);
             loginPanel.Controls.Add(btnLogin);
 
             btnRegister = new Button { Left = 460, Top = 27, Width = 130, Text = "Регистрация", Name = "btnRegister" };
-            btnRegister.Click += (_, __) => Register();
+            btnRegister.Click += (_, __) => ExecuteSafe(Register);
             loginPanel.Controls.Add(btnRegister);
 
             lblStatus = new Label { Left = 610, Top = 32, Width = 560, Font = new Font(Font.FontFamily, 10f, FontStyle.Bold), ForeColor = Color.FromArgb(0, 90, 170) };
@@ -136,7 +136,7 @@ namespace himchistka
             tabProfile.Controls.Add(txtPasswordProfile);
 
             btnSaveProfile = new Button { Left = 180, Top = 230, Width = 200, Height = 35, Text = "Сохранить изменения", Name = "btnSaveChanges" };
-            btnSaveProfile.Click += (_, __) => SaveProfile();
+            btnSaveProfile.Click += (_, __) => ExecuteSafe(SaveProfile);
             tabProfile.Controls.Add(btnSaveProfile);
         }
 
@@ -168,19 +168,19 @@ namespace himchistka
             tabCatalog.Controls.Add(dgvCatalog);
 
             btnAddToCart = new Button { Left = 20, Top = 575, Width = 180, Height = 38, Text = "Добавить в корзину" };
-            btnAddToCart.Click += (_, __) => AddSelectedProductToCart();
+            btnAddToCart.Click += (_, __) => ExecuteSafe(AddSelectedProductToCart);
             tabCatalog.Controls.Add(btnAddToCart);
 
             btnAddProduct = new Button { Left = 230, Top = 575, Width = 160, Height = 38, Text = "Добавить товар" };
-            btnAddProduct.Click += (_, __) => AddOrEditProduct();
+            btnAddProduct.Click += (_, __) => ExecuteSafe(() => AddOrEditProduct());
             tabCatalog.Controls.Add(btnAddProduct);
 
             btnEditProduct = new Button { Left = 400, Top = 575, Width = 160, Height = 38, Text = "Изменить товар" };
-            btnEditProduct.Click += (_, __) => AddOrEditProduct(GetSelectedProduct());
+            btnEditProduct.Click += (_, __) => ExecuteSafe(() => AddOrEditProduct(GetSelectedProduct()));
             tabCatalog.Controls.Add(btnEditProduct);
 
             btnDeleteProduct = new Button { Left = 570, Top = 575, Width = 160, Height = 38, Text = "Удалить товар" };
-            btnDeleteProduct.Click += (_, __) => DeleteSelectedProduct();
+            btnDeleteProduct.Click += (_, __) => ExecuteSafe(DeleteSelectedProduct);
             tabCatalog.Controls.Add(btnDeleteProduct);
         }
 
@@ -201,11 +201,11 @@ namespace himchistka
             tabCart.Controls.Add(dgvCart);
 
             btnRemoveFromCart = new Button { Left = 20, Top = 560, Width = 210, Height = 38, Text = "Удалить из корзины" };
-            btnRemoveFromCart.Click += (_, __) => RemoveSelectedCartItem();
+            btnRemoveFromCart.Click += (_, __) => ExecuteSafe(RemoveSelectedCartItem);
             tabCart.Controls.Add(btnRemoveFromCart);
 
             btnCheckout = new Button { Left = 245, Top = 560, Width = 210, Height = 38, Text = "Оформить заказ" };
-            btnCheckout.Click += (_, __) => Checkout();
+            btnCheckout.Click += (_, __) => ExecuteSafe(Checkout);
             tabCart.Controls.Add(btnCheckout);
         }
 
@@ -241,11 +241,11 @@ namespace himchistka
             tabUsers.Controls.Add(dgvUsers);
 
             btnPromoteToManager = new Button { Left = 20, Top = 550, Width = 220, Height = 38, Text = "Назначить менеджером" };
-            btnPromoteToManager.Click += (_, __) => ChangeRole(UserRole.Manager);
+            btnPromoteToManager.Click += (_, __) => ExecuteSafe(() => ChangeRole(UserRole.Manager));
             tabUsers.Controls.Add(btnPromoteToManager);
 
             btnPromoteToAdmin = new Button { Left = 250, Top = 550, Width = 220, Height = 38, Text = "Назначить администратором" };
-            btnPromoteToAdmin.Click += (_, __) => ChangeRole(UserRole.Administrator);
+            btnPromoteToAdmin.Click += (_, __) => ExecuteSafe(() => ChangeRole(UserRole.Administrator));
             tabUsers.Controls.Add(btnPromoteToAdmin);
         }
 
@@ -260,11 +260,20 @@ namespace himchistka
 
         private void Register()
         {
+            var loginInput = txtLogin.Text.Trim();
+            var email = txtEmailProfile.Text.Trim();
+            var phone = txtPhoneProfile.Text.Trim();
+
+            if (loginInput.Contains("@"))
+                email = loginInput;
+            else if (!string.IsNullOrWhiteSpace(loginInput))
+                phone = loginInput;
+
             var newUser = new User
             {
                 FullName = txtNameProfile.Text.Trim(),
-                Email = txtLogin.Text.Trim().Contains("@") ? txtLogin.Text.Trim() : txtEmailProfile.Text.Trim(),
-                Phone = txtLogin.Text.Trim().StartsWith("+") ? txtLogin.Text.Trim() : txtPhoneProfile.Text.Trim(),
+                Email = email,
+                Phone = phone,
                 Password = txtPassword.Text
             };
 
@@ -461,7 +470,19 @@ namespace himchistka
             txtNameProfile.Text = _currentUser?.FullName ?? string.Empty;
             txtEmailProfile.Text = _currentUser?.Email ?? string.Empty;
             txtPhoneProfile.Text = _currentUser?.Phone ?? string.Empty;
-            txtPasswordProfile.Text = _currentUser?.Password ?? string.Empty;
+            txtPasswordProfile.Text = string.Empty;
+        }
+
+        private void ExecuteSafe(Action action)
+        {
+            try
+            {
+                action();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Операция не выполнена", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
         }
 
         private void ApplyRoleVisibility()
