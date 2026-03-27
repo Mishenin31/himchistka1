@@ -69,16 +69,29 @@ namespace himchistka.Services
             _products.Remove(product);
         }
 
-        public Order Checkout(int userId, List<OrderItem> items)
+        public Order Checkout(int userId, List<OrderItem> items, DateTime scheduledAt, int durationHours, bool isQueueBooking)
         {
             if (items == null || items.Count == 0)
                 throw new InvalidOperationException("Корзина пуста.");
+            if (durationHours <= 0)
+                throw new InvalidOperationException("Некорректная длительность записи.");
+            if (scheduledAt < DateTime.Now.AddHours(-1))
+                throw new InvalidOperationException("Нельзя выбрать время записи в прошлом.");
+
+            var totalAmount = items.Sum(i => i.Total);
+            var queueDeposit = isQueueBooking
+                ? Math.Round(totalAmount * 0.08m, 2)
+                : 0m;
 
             var order = new Order
             {
                 Id = _nextOrderId++,
                 UserId = userId,
                 CreatedAt = DateTime.Now,
+                ScheduledAt = scheduledAt,
+                DurationHours = durationHours,
+                IsQueueBooking = isQueueBooking,
+                QueueDepositAmount = queueDeposit,
                 Items = items.Select(i => new OrderItem
                 {
                     ProductId = i.ProductId,
@@ -86,7 +99,7 @@ namespace himchistka.Services
                     UnitPrice = i.UnitPrice,
                     Quantity = i.Quantity
                 }).ToList(),
-                TotalAmount = items.Sum(i => i.Total)
+                TotalAmount = totalAmount
             };
 
             _orders.Add(order);
