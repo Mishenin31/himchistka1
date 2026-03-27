@@ -54,9 +54,11 @@
     </Compile>
     <Compile Include="Forms\LoginForm.cs" />
     <Compile Include="Forms\ProductEditorForm.cs" />
+    <Compile Include="Models\AppState.cs" />
     <Compile Include="Models\DomainModels.cs" />
     <Compile Include="Services\AuthService.cs" />
     <Compile Include="Services\CatalogService.cs" />
+    <Compile Include="Services\DatabaseService.cs" />
     <Compile Include="Services\ValidationService.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

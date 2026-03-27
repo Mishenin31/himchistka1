@@ -8,14 +8,16 @@ namespace himchistka.Services
 {
     public sealed class CatalogService
     {
-        private readonly List<Product> _products = new List<Product>();
-        private readonly List<Order> _orders = new List<Order>();
-        private int _nextProductId = 1;
-        private int _nextOrderId = 1;
+        private readonly DatabaseService _database;
+        private readonly List<Product> _products;
+        private readonly List<Order> _orders;
 
-        public CatalogService()
+        public CatalogService(DatabaseService database)
         {
-            SeedProducts();
+            _database = database ?? throw new ArgumentNullException(nameof(database));
+            _products = _database.State.Products;
+            _orders = _database.State.Orders;
+            SeedProductsIfEmpty();
         }
 
         public IReadOnlyList<Product> Products => _products;
@@ -43,8 +45,9 @@ namespace himchistka.Services
         public Product AddProduct(Product product)
         {
             ValidationService.ValidateProduct(product);
-            product.Id = _nextProductId++;
+            product.Id = _database.State.NextProductId++;
             _products.Add(product);
+            _database.Save();
             return product;
         }
 
@@ -58,6 +61,7 @@ namespace himchistka.Services
             product.OldPrice = changed.OldPrice;
             product.DiscountPercent = changed.DiscountPercent;
             product.ImagePath = changed.ImagePath;
+            _database.Save();
         }
 
         public void DeleteProduct(int productId)
@@ -67,6 +71,7 @@ namespace himchistka.Services
 
             var product = _products.FirstOrDefault(p => p.Id == productId) ?? throw new InvalidOperationException("Товар не найден.");
             _products.Remove(product);
+            _database.Save();
         }
 
         public Order Checkout(int userId, List<OrderItem> items, DateTime scheduledAt, int durationHours, bool isQueueBooking)
@@ -85,7 +90,7 @@ namespace himchistka.Services
 
             var order = new Order
             {
-                Id = _nextOrderId++,
+                Id = _database.State.NextOrderId++,
                 UserId = userId,
                 CreatedAt = DateTime.Now,
                 ScheduledAt = scheduledAt,
@@ -103,6 +108,7 @@ namespace himchistka.Services
             };
 
             _orders.Add(order);
+            _database.Save();
             return order;
         }
 
@@ -122,8 +128,11 @@ namespace himchistka.Services
             return Path.Combine("ProductImages", fileName);
         }
 
-        private void SeedProducts()
+        private void SeedProductsIfEmpty()
         {
+            if (_products.Count > 0)
+                return;
+
             AddProduct(new Product { Name = "Пальто шерстяное", Category = "Одежда", Price = 1200, OldPrice = 1500, DiscountPercent = 20 });
             AddProduct(new Product { Name = "Костюм мужской", Category = "Одежда", Price = 950 });
             AddProduct(new Product { Name = "Химчистка ковра", Category = "Дом", Price = 2200 });
