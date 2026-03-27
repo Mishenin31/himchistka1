@@ -40,6 +40,13 @@ namespace himchistka
         private DataGridView dgvCart;
         private Button btnRemoveFromCart;
         private Button btnCheckout;
+        private Panel pnlBooking;
+        private MonthCalendar calBookingDate;
+        private ComboBox cmbBookingHour;
+        private ComboBox cmbDurationHours;
+        private CheckBox chkQueueBooking;
+        private Label lblQueuePrice;
+        private Label lblQueueHint;
 
         private DataGridView dgvOrders;
         private DataGridView dgvUsers;
@@ -190,7 +197,7 @@ namespace himchistka
             {
                 Left = 20,
                 Top = 20,
-                Width = 1120,
+                Width = 700,
                 Height = 520,
                 AutoGenerateColumns = true,
                 ReadOnly = true,
@@ -200,6 +207,8 @@ namespace himchistka
             };
             tabCart.Controls.Add(dgvCart);
 
+            BuildBookingPanel();
+
             btnRemoveFromCart = new Button { Left = 20, Top = 560, Width = 210, Height = 38, Text = "Удалить из корзины" };
             btnRemoveFromCart.Click += (_, __) => ExecuteSafe(RemoveSelectedCartItem);
             tabCart.Controls.Add(btnRemoveFromCart);
@@ -207,6 +216,151 @@ namespace himchistka
             btnCheckout = new Button { Left = 245, Top = 560, Width = 210, Height = 38, Text = "Оформить заказ" };
             btnCheckout.Click += (_, __) => ExecuteSafe(Checkout);
             tabCart.Controls.Add(btnCheckout);
+        }
+
+        private void BuildBookingPanel()
+        {
+            pnlBooking = new Panel
+            {
+                Left = 740,
+                Top = 20,
+                Width = 400,
+                Height = 578,
+                BackColor = Color.FromArgb(22, 27, 37),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right | AnchorStyles.Bottom
+            };
+            tabCart.Controls.Add(pnlBooking);
+
+            var lblCalendar = new Label
+            {
+                Left = 20,
+                Top = 16,
+                Width = 250,
+                Text = "Календарь",
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                ForeColor = Color.FromArgb(236, 239, 245)
+            };
+            pnlBooking.Controls.Add(lblCalendar);
+
+            calBookingDate = new MonthCalendar
+            {
+                Left = 20,
+                Top = 52,
+                MaxSelectionCount = 1,
+                FirstDayOfWeek = Day.Monday,
+                MinDate = DateTime.Today,
+                BackColor = Color.FromArgb(22, 27, 37),
+                ForeColor = Color.FromArgb(225, 228, 235),
+                TitleBackColor = Color.FromArgb(22, 27, 37),
+                TitleForeColor = Color.FromArgb(225, 228, 235),
+                TrailingForeColor = Color.FromArgb(102, 109, 125)
+            };
+            pnlBooking.Controls.Add(calBookingDate);
+
+            var lblTime = new Label
+            {
+                Left = 20,
+                Top = 230,
+                Width = 180,
+                Text = "Выберите время",
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                ForeColor = Color.FromArgb(236, 239, 245)
+            };
+            pnlBooking.Controls.Add(lblTime);
+
+            cmbBookingHour = new ComboBox
+            {
+                Left = 20,
+                Top = 257,
+                Width = 140,
+                DropDownStyle = ComboBoxStyle.DropDownList
+            };
+            cmbBookingHour.Items.AddRange(new object[]
+            {
+                "08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00"
+            });
+            cmbBookingHour.SelectedIndex = 2;
+            pnlBooking.Controls.Add(cmbBookingHour);
+
+            var lblDuration = new Label
+            {
+                Left = 180,
+                Top = 230,
+                Width = 180,
+                Text = "Длительность",
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                ForeColor = Color.FromArgb(236, 239, 245)
+            };
+            pnlBooking.Controls.Add(lblDuration);
+
+            cmbDurationHours = new ComboBox
+            {
+                Left = 180,
+                Top = 257,
+                Width = 180,
+                DropDownStyle = ComboBoxStyle.DropDownList
+            };
+            cmbDurationHours.Items.AddRange(new object[] { "2 часа", "4 часа", "8 часов", "12 часов" });
+            cmbDurationHours.SelectedIndex = 3;
+            cmbDurationHours.SelectedIndexChanged += (_, __) => UpdateQueueInfo();
+            pnlBooking.Controls.Add(cmbDurationHours);
+
+            var pnlQueue = new Panel
+            {
+                Left = 20,
+                Top = 310,
+                Width = 360,
+                Height = 180,
+                BackColor = Color.FromArgb(43, 49, 59)
+            };
+            pnlBooking.Controls.Add(pnlQueue);
+
+            var lblQueueTitle = new Label
+            {
+                Left = 12,
+                Top = 12,
+                Width = 330,
+                Text = "🔴 ОЧЕРЕДЬ",
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                ForeColor = Color.FromArgb(255, 89, 151)
+            };
+            pnlQueue.Controls.Add(lblQueueTitle);
+
+            lblQueueHint = new Label
+            {
+                Left = 12,
+                Top = 42,
+                Width = 332,
+                Height = 66,
+                Text = "Вы можете встать в очередь. За 72 часа до выбранного времени сообщим подтверждение.",
+                Font = new Font("Segoe UI", 10),
+                ForeColor = Color.FromArgb(195, 200, 212)
+            };
+            pnlQueue.Controls.Add(lblQueueHint);
+
+            chkQueueBooking = new CheckBox
+            {
+                Left = 12,
+                Top = 118,
+                Width = 140,
+                Text = "Записаться в очередь",
+                ForeColor = Color.FromArgb(236, 239, 245),
+                Checked = true
+            };
+            chkQueueBooking.CheckedChanged += (_, __) => UpdateQueueInfo();
+            pnlQueue.Controls.Add(chkQueueBooking);
+
+            lblQueuePrice = new Label
+            {
+                Left = 160,
+                Top = 118,
+                Width = 188,
+                Height = 42,
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                ForeColor = Color.FromArgb(41, 224, 108),
+                TextAlign = ContentAlignment.TopRight
+            };
+            pnlQueue.Controls.Add(lblQueuePrice);
         }
 
         private void BuildOrdersTab()
@@ -378,16 +532,29 @@ namespace himchistka
                 UnitPrice = i.UnitPrice
             }).ToList();
             if (dgvCart != null) dgvCart.DataSource = _cartBinding;
+            UpdateQueueInfo();
         }
 
         private void Checkout()
         {
             EnsureAuthenticated();
-            _catalogService.Checkout(_currentUser.Id, _cartItems.ToList());
+            var selectedDate = calBookingDate.SelectionStart.Date;
+            var selectedHour = TimeSpan.Parse(cmbBookingHour.SelectedItem?.ToString() ?? "12:00");
+            var scheduledAt = selectedDate.Add(selectedHour);
+            var durationHours = ParseDurationHours();
+            var useQueue = chkQueueBooking.Checked;
+
+            _catalogService.Checkout(_currentUser.Id, _cartItems.ToList(), scheduledAt, durationHours, useQueue);
             _cartItems.Clear();
             RefreshCart();
             RefreshOrders();
-            MessageBox.Show("Заказ успешно оформлен.", "Заказ", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            var bookingType = useQueue ? "очередь" : "мгновенное подтверждение";
+            MessageBox.Show(
+                $"Заказ успешно оформлен.\nДата: {scheduledAt:dd.MM.yyyy HH:mm}\nДлительность: {durationHours} ч.\nТип: {bookingType}.",
+                "Запись подтверждена",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
         }
 
         private void RefreshOrders()
@@ -401,11 +568,41 @@ namespace himchistka
                 o.Id,
                 o.UserId,
                 o.CreatedAt,
+                ЗаписьНа = o.ScheduledAt,
+                ДлительностьЧасов = o.DurationHours,
+                Очередь = o.IsQueueBooking ? "Да" : "Нет",
+                Депозит = o.QueueDepositAmount,
                 o.TotalAmount,
                 Positions = o.Items.Count
             }).ToList();
 
             if (dgvOrders != null) dgvOrders.DataSource = _ordersBinding;
+        }
+
+        private int ParseDurationHours()
+        {
+            var text = cmbDurationHours.SelectedItem?.ToString() ?? "12 часов";
+            var digits = new string(text.Where(char.IsDigit).ToArray());
+            return int.TryParse(digits, out var value) ? value : 12;
+        }
+
+        private void UpdateQueueInfo()
+        {
+            if (lblQueuePrice == null)
+                return;
+
+            var duration = ParseDurationHours();
+            var total = _cartItems.Sum(i => i.Total);
+            var queueDeposit = Math.Round(total * 0.08m, 2);
+            var perHour = duration > 0 ? Math.Round(queueDeposit / duration, 2) : queueDeposit;
+
+            lblQueuePrice.Text = $"≈{queueDeposit:0.##} ₽ / {duration}ч\n≈{perHour:0.##} ₽ / 1ч";
+            lblQueuePrice.ForeColor = chkQueueBooking != null && chkQueueBooking.Checked
+                ? Color.FromArgb(41, 224, 108)
+                : Color.FromArgb(138, 146, 165);
+            lblQueueHint.ForeColor = chkQueueBooking != null && chkQueueBooking.Checked
+                ? Color.FromArgb(195, 200, 212)
+                : Color.FromArgb(138, 146, 165);
         }
 
         private void RefreshUsers()

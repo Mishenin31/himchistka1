@@ -50,6 +50,10 @@ namespace himchistka.Models
         public int Id { get; set; }
         public int UserId { get; set; }
         public DateTime CreatedAt { get; set; }
+        public DateTime ScheduledAt { get; set; }
+        public int DurationHours { get; set; }
+        public bool IsQueueBooking { get; set; }
+        public decimal QueueDepositAmount { get; set; }
         public List<OrderItem> Items { get; set; }
         public decimal TotalAmount { get; set; }
     }
