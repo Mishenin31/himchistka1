@@ -11,11 +11,23 @@ namespace himchistka.Services
 
         public static void ValidateRegistration(User user)
         {
+            ValidateProfile(user);
+            ValidatePassword(user.Password);
+        }
+
+        public static void ValidateProfile(User user)
+        {
             if (user == null) throw new ArgumentException("Пользователь не может быть пустым.");
             if (string.IsNullOrWhiteSpace(user.FullName)) throw new ArgumentException("Введите имя.");
             if (string.IsNullOrWhiteSpace(user.Email) || !EmailRegex.IsMatch(user.Email)) throw new ArgumentException("Некорректный email.");
             if (string.IsNullOrWhiteSpace(user.Phone) || !PhoneRegex.IsMatch(user.Phone)) throw new ArgumentException("Некорректный телефон. Пример: +79991234567");
-            if (string.IsNullOrWhiteSpace(user.Password) || user.Password.Length < 6) throw new ArgumentException("Пароль должен содержать минимум 6 символов.");
+        }
+
+        public static void ValidatePassword(string password)
+        {
+            if (string.IsNullOrWhiteSpace(password) || password.Length < 8) throw new ArgumentException("Пароль должен содержать минимум 8 символов.");
+            if (!Regex.IsMatch(password, "[A-Za-z]") || !Regex.IsMatch(password, "[0-9]"))
+                throw new ArgumentException("Пароль должен содержать минимум одну букву и одну цифру.");
         }
 
         public static void ValidateProduct(Product product)
