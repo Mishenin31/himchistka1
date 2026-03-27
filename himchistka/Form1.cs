@@ -10,8 +10,9 @@ namespace himchistka
 {
     public partial class Form1 : Form
     {
-        private readonly AuthService _authService = new AuthService();
-        private readonly CatalogService _catalogService = new CatalogService();
+        private readonly DatabaseService _databaseService = new DatabaseService();
+        private readonly AuthService _authService;
+        private readonly CatalogService _catalogService;
 
         private User _currentUser;
         private readonly BindingSource _catalogBinding = new BindingSource();
@@ -66,6 +67,9 @@ namespace himchistka
 
         public Form1()
         {
+            _authService = new AuthService(_databaseService);
+            _catalogService = new CatalogService(_databaseService);
+
             InitializeComponent();
             BuildUi();
             RefreshAll();

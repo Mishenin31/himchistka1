@@ -10,12 +10,14 @@ namespace himchistka.Services
 {
     public sealed class AuthService
     {
-        private readonly List<User> _users = new List<User>();
-        private int _nextId = 1;
+        private readonly DatabaseService _database;
+        private readonly List<User> _users;
 
-        public AuthService()
+        public AuthService(DatabaseService database)
         {
-            SeedUsers();
+            _database = database ?? throw new ArgumentNullException(nameof(database));
+            _users = _database.State.Users;
+            SeedUsersIfEmpty();
         }
 
         public IReadOnlyList<User> Users => _users;
@@ -29,10 +31,11 @@ namespace himchistka.Services
             if (_users.Any(u => u.Phone == user.Phone))
                 throw new InvalidOperationException("Пользователь с таким телефоном уже существует.");
 
-            user.Id = _nextId++;
+            user.Id = _database.State.NextUserId++;
             user.Role = UserRole.User;
             user.Password = HashPassword(user.Password);
             _users.Add(user);
+            _database.Save();
             return user;
         }
 
@@ -69,19 +72,26 @@ namespace himchistka.Services
                 ValidationService.ValidatePassword(normalizedPassword);
                 source.Password = HashPassword(normalizedPassword);
             }
+
+            _database.Save();
         }
 
         public void UpdateUserRole(int userId, UserRole role)
         {
             var user = _users.FirstOrDefault(u => u.Id == userId) ?? throw new InvalidOperationException("Пользователь не найден.");
             user.Role = role;
+            _database.Save();
         }
 
-        private void SeedUsers()
+        private void SeedUsersIfEmpty()
         {
-            _users.Add(new User { Id = _nextId++, FullName = "Администратор", Email = "admin@dryclean.local", Phone = "+79990000001", Password = HashPassword("admin123"), Role = UserRole.Administrator });
-            _users.Add(new User { Id = _nextId++, FullName = "Менеджер", Email = "manager@dryclean.local", Phone = "+79990000002", Password = HashPassword("manager123"), Role = UserRole.Manager });
-            _users.Add(new User { Id = _nextId++, FullName = "Клиент", Email = "user@dryclean.local", Phone = "+79990000003", Password = HashPassword("user123"), Role = UserRole.User });
+            if (_users.Count > 0)
+                return;
+
+            _users.Add(new User { Id = _database.State.NextUserId++, FullName = "Администратор", Email = "admin@dryclean.local", Phone = "+79990000001", Password = HashPassword("admin123"), Role = UserRole.Administrator });
+            _users.Add(new User { Id = _database.State.NextUserId++, FullName = "Менеджер", Email = "manager@dryclean.local", Phone = "+79990000002", Password = HashPassword("manager123"), Role = UserRole.Manager });
+            _users.Add(new User { Id = _database.State.NextUserId++, FullName = "Клиент", Email = "user@dryclean.local", Phone = "+79990000003", Password = HashPassword("user123"), Role = UserRole.User });
+            _database.Save();
         }
 
         private static void NormalizeUserFields(User user)
