@@ -53,6 +53,11 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\LoginForm.cs" />
+    <Compile Include="Forms\ProductEditorForm.cs" />
+    <Compile Include="Models\DomainModels.cs" />
+    <Compile Include="Services\AuthService.cs" />
+    <Compile Include="Services\CatalogService.cs" />
+    <Compile Include="Services\ValidationService.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
